@@ -2635,7 +2635,13 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 				 "%s",
 				 mask_id,
 				 discard_filter ? "" : "  <g filter=\"url(#alpha)\">\n");
-    status = _cairo_svg_surface_emit_paint (mask_stream, surface, CAIRO_OPERATOR_OVER, mask, source, NULL);
+    // [DS] PCC-3434 apply source transform to mask only if source is an image / not a rect.
+    // Using same condition here as in _cairo_svg_surface_emit_paint  
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
+        source->extend == CAIRO_EXTEND_NONE)
+        status = _cairo_svg_surface_emit_paint (mask_stream, surface, CAIRO_OPERATOR_OVER, mask, source, NULL);
+    else
+        status = _cairo_svg_surface_emit_paint (mask_stream, surface, CAIRO_OPERATOR_OVER, mask, 0, NULL);
     if (unlikely (status)) {
 	cairo_status_t ignore = _cairo_output_stream_destroy (mask_stream);
 	return status;
